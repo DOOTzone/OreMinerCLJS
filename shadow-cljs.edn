@@ -1,0 +1,45 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src"]
+
+ :dependencies
+ [[reagent "1.3.0"]
+  [reagent-utils "0.3.8"]
+  [cider/cider-nrepl "0.50.2"]
+  [cljs-ajax "0.8.4"]
+  [com.lambdaisland/deja-fu "1.6.65"]
+  [metosin/malli "0.16.4"] 
+  ;; [net.mikera/core.matrix "0.63.0"]
+  ]
+
+  :dev-http
+  {3000 "resources/public"}
+
+ 
+ :builds
+ {:dev {:http-root "resources/public"
+        :output-dir "resources/public/js/compiled"
+        :asset-path "js/compiled"
+        :target :browser
+        :modules {:main {:init-fn main/main!}}
+        :devtools {:after-load main/reload!
+                   :watch-dir "src"
+                   :watch-path "C:/Users/POL/Programming/Clojure_Testing/CLJStest/src"}
+        }
+
+  :test {:target :node-test
+         :output-to "target/test.js"
+         :ns-regexp "-test$"
+         :autorun true
+         }
+
+  :browser-test {:target :browser-test
+                 :test-dir "target/browser-tests"
+                 :ns-regexp "-test$"
+                 }
+  :tester
+    {:target :browser
+     :output-dir "resources/public/js/compiled"
+     :asset-path "/js/compiled"
+     :modules {:main {:init-fn tester/init!}}}}}
+ 
