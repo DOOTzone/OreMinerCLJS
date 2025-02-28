@@ -10,15 +10,19 @@
   (def price (r/atom 10))
   (def worker-power (r/atom 0))
   (def worker-price (r/atom 100))
+  (def worker-upgrades (r/atom 1))
+  (def click-upgrades (r/atom 1.2))
+  (def worker-upgrades-cost (r/atom 400))
+  (def click-upgrades-cost (r/atom 40))
 
 
 ;Game Functions
   (defn round [n]
     (pprint/cl-format nil "~,2f" n))
 
-  (defn mine [n]
-    (swap! funds + n)
-    (swap! total-funds + n))
+  (defn mine []
+    (swap! funds + (* @click-power @click-upgrades))
+    (swap! total-funds + (* @click-power @click-upgrades )))
   
   (defn upgrade-click []
     (when (>= @funds @price)
@@ -39,7 +43,7 @@
   (fn [] 
     (do 
       (swap! funds + (/ @worker-power 100)) 
-      (swap! total-funds + (/ @worker-power 100))))10)
+      (swap! total-funds + (/ (* @worker-power @worker-upgrades)  100))))10)
 
 
 
@@ -50,7 +54,7 @@
      [:h1 "Ore Miner: Powered by ClojureScript!"]
      [:p "Currnent Funds: " (round @funds)]
      [:button 
-        {:on-click #(mine @click-power) 
+        {:on-click #(mine) 
          :style {:height "100px" :width "100px"}} "Mine!"]
      [:p "Click Power: " @click-power]
      [:p "Worker Power: " @worker-power]
