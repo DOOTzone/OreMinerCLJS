@@ -23,23 +23,6 @@
         :target :browser
         :modules {:main {:init-fn main/main!}}
         :devtools {:after-load main/reload!
-                   :watch-dir "src"
-                   :watch-path "C:/Users/POL/Programming/Clojure_Testing/CLJStest/src"}
-        }
-
-  :test {:target :node-test
-         :output-to "target/test.js"
-         :ns-regexp "-test$"
-         :autorun true
-         }
-
-  :browser-test {:target :browser-test
-                 :test-dir "target/browser-tests"
-                 :ns-regexp "-test$"
-                 }
-  :tester
-    {:target :browser
-     :output-dir "resources/public/js/compiled"
-     :asset-path "/js/compiled"
-     :modules {:main {:init-fn tester/init!}}}}}
+                   :watch-dir "src"}
+        }}}
  
