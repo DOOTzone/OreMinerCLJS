@@ -60,7 +60,7 @@
    (when (>= @funds @team-price)
        (swap! worker-power + 5)
        (swap! funds - @team-price)
-       (swap! team-price *  1.35)))
+       (swap! team-price *  1.65)))
     
 (defn upgrade-worker []
   (when (>= @funds @worker-upgrades-cost)
@@ -87,6 +87,7 @@
                     :worker-price @worker-price
                     :worker-upgrades-cost @worker-upgrades-cost
                     :click-upgrades-cost @click-upgrades-cost
+                    :team-price @team-price
                     :ascension @ascension}]
     (js/localStorage.setItem "gameState" (js/JSON.stringify (clj->js game-state)))
     (reset! notification "Game saved!")
@@ -106,6 +107,7 @@
       (reset! worker-upgrades-cost (:worker-upgrades-cost parsed))
       (reset! click-upgrades-cost (:click-upgrades-cost parsed))
       (reset! ascension (:ascension parsed))
+      (reset! team-price (:team-price parsed))
       (js/console.log "Game loaded!"))))
 
 (defn reset-game []
@@ -122,6 +124,7 @@
   (reset! worker-price 100)
   (reset! worker-upgrades-cost 400)
   (reset! click-upgrades-cost 40)
+  (reset! team-price 1000)
   (reset! ascension 1))))
 
   (defn format-number [n]
@@ -163,8 +166,10 @@
                     :click-upgrades @click-upgrades
                     :price @price
                     :worker-price @worker-price
+                    :team-price @team-price
                     :worker-upgrades-cost @worker-upgrades-cost
-                    :click-upgrades-cost @click-upgrades-cost}
+                    :click-upgrades-cost @click-upgrades-cost
+                    :ascension @ascension}
         json-str (js/JSON.stringify (clj->js game-state))
         blob (js/Blob. (clj->js [json-str]) #js {:type "application/json"})
         url (js/URL.createObjectURL blob)
@@ -191,6 +196,8 @@
               (reset! worker-price (:worker-price json-data))
               (reset! worker-upgrades-cost (:worker-upgrades-cost json-data))
               (reset! click-upgrades-cost (:click-upgrades-cost json-data))
+              (reset! team-price (:team-price json-data))
+              (reset! ascension (:ascension json-data))
               (js/console.log "Game imported!"))))
     (.readAsText reader file)))
 
@@ -274,14 +281,16 @@
      [:button 
       {:on-click #(mine)} "Mine!"]
      [:p "Click Power: " @click-power]
-     [:p "Click Upgrades: " (format-number @click-upgrades)]
-     [:p "Worker Power: " @worker-power]
-     [:p "Worker Upgrades: " (format-number @worker-upgrades)]
+     [:p "Click Multiplier: " (format-number @click-upgrades)]
+     [:p "Workers: " @worker-power]
+     [:p "Worker Multiplier: " (format-number @worker-upgrades)]
      [:button 
       {:on-click #(add-click)} "Sharpen Equipment! price: " (format-number @price)] 
      [:button 
       {:on-click #(get-worker)} "Hire Worker! price: " (format-number @worker-price)] 
      [:button 
+      {:on-click #(get-team)} "Hire a team! price: " (format-number @team-price)] 
+     [:button
       {:on-click #(upgrade-worker)} "Upgrade Workers! price: " (format-number @worker-upgrades-cost)]
      [:button 
       {:on-click #(upgrade-click)} "Upgrade Clicking! price: " (format-number @click-upgrades-cost)]
