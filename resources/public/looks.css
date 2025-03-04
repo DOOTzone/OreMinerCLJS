@@ -15,6 +15,54 @@
     margin: 0;
 }
 
+#save-button {
+    position: fixed;
+    top: 10px;
+    right: 370px;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    height: auto;
+    width: auto; 
+    margin: 0;
+}
+
+#export-button {
+    position: fixed;
+    top: 10px;
+    right: 250px;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    height: auto;
+    width: auto; 
+    margin: 0;
+}
+
+#import-button {
+    position: fixed;
+    top: 10px;
+    right: 130px;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    height: auto;
+    width: auto; 
+    margin: 0;
+}
+
 /* General button styles */
 button, 
 input[type="button"], 
