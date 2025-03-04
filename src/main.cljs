@@ -134,17 +134,88 @@
     (>= n 1e3)  (str (round (/ n 1e3)) "K")     ;; Thousands
     :else       (round n)))                     ;; Normal number
 
+(defn save-last-timestamp []
+  (when-not (.-hidden js/document)  ;; Only update if tab is visible
+     (js/localStorage.setItem "lastActiveTime" (str (js/Date.now)))))
+
+(defn load-last-timestamp []
+  (some-> (js/localStorage.getItem "lastActiveTime") js/parseInt))
+
+(defn apply-offline-progress []
+  (let [last-time (load-last-timestamp)
+        now (js/Date.now)]
+    (when (and last-time (> now last-time))
+      (let [elapsed-seconds (/ (- now last-time) 1000)
+            offline-gain (* @worker-power @worker-upgrades elapsed-seconds)]
+        (swap! funds + offline-gain)
+        (swap! total-funds + offline-gain)
+        (js/console.log (str "Offline earnings: " (round offline-gain)))
+        (js/console.log (str "Time away: " (round elapsed-seconds)))
+        (js/console.log (str "last here: " (round last-time)))
+        (js/console.log (str "now: " (round now)))))))
+
+(defn export-save []
+  (let [game-state {:funds @funds
+                    :total-funds @total-funds
+                    :click-power @click-power
+                    :worker-power @worker-power
+                    :worker-upgrades @worker-upgrades
+                    :click-upgrades @click-upgrades
+                    :price @price
+                    :worker-price @worker-price
+                    :worker-upgrades-cost @worker-upgrades-cost
+                    :click-upgrades-cost @click-upgrades-cost}
+        json-str (js/JSON.stringify (clj->js game-state))
+        blob (js/Blob. (clj->js [json-str]) #js {:type "application/json"})
+        url (js/URL.createObjectURL blob)
+        a (.createElement js/document "a")]
+    (set! (.-href a) url)
+    (set! (.-download a) "savegame.json")
+    (.click a)
+    (js/URL.revokeObjectURL url)))
+
+(defn import-save [event]
+  (let [file (-> event .-target .-files (aget 0))
+        reader (js/FileReader.)]
+    (set! (.-onload reader)
+          (fn [e]
+            (let [json-data (js->clj (js/JSON.parse (.-result e.target))
+                                     :keywordize-keys true)]
+              (reset! funds (:funds json-data))
+              (reset! total-funds (:total-funds json-data))
+              (reset! click-power (:click-power json-data))
+              (reset! worker-power (:worker-power json-data))
+              (reset! worker-upgrades (:worker-upgrades json-data))
+              (reset! click-upgrades (:click-upgrades json-data))
+              (reset! price (:price json-data))
+              (reset! worker-price (:worker-price json-data))
+              (reset! worker-upgrades-cost (:worker-upgrades-cost json-data))
+              (reset! click-upgrades-cost (:click-upgrades-cost json-data))
+              (js/console.log "Game imported!"))))
+    (.readAsText reader file)))
+
 
 
 ;Timed actions
-  (js/setInterval
+
+;;update funds with partial total worker power at a rate of every 25ms (1/40th of a second)
+;;where the partial total power is also 1/40 to make 1 whole per second
+(js/setInterval
    (fn []
      (do
        (swap! funds + (/ (* @worker-power @worker-upgrades) 40))
-       (swap! total-funds + (/ (* @worker-power @worker-upgrades) 40))))
-   25)
+       (swap! total-funds + (/ (* @worker-power @worker-upgrades) 40)))) 
+ 25)
 
-  (js/setInterval save-game 20000)
+(js/setInterval save-game 20000)
+
+(js/setInterval save-last-timestamp 1000)
+
+(.addEventListener js/document "visibilitychange"
+                   (fn []
+                     (when (= js/document.visibilityState "visible")
+                       (apply-offline-progress)
+                       (save-last-timestamp)))) ;; Reset timestamp when user comes back
 
 
 
@@ -164,22 +235,37 @@
      @notification]))
 
 (defn reset-button []
-  [:button#reset-button {:on-click reset-game
-            :style {:position "fixed"
-                    :top "10px"
-                    :right "10px"
-                    :padding "10px 15px"
-                    :background-color "rgba(0, 0, 0, 0.8)"
-                    :color "white"
-                    :border "none"
-                    :border-radius "5px"
-                    :cursor "pointer"
-                    :font-weight "bold"}}
+  [:button#reset-button {:on-click reset-game}
    "Reset Game"])
+
+(defn save-button []
+  [:button#save-button {:on-click save-game}
+   "Save Game"])
+
+(defn export-button []
+  [:button#export-button {:on-click export-save}
+   "Export save"])
+
+(defn import-button []
+  [:button#import-button {:on-click #(-> js/document
+                                         (.getElementById "file-import")
+                                         .click)}
+   "Import save"])
+
+(defn file-input []
+  [:input {:type "file"
+           :accept ".json"
+           :style {:display "none"} ;; Hide it
+           :id "file-import"
+           :on-change import-save}])
 
   (defn app []
     [:div 
+     [file-input]
      [reset-button]
+     [save-button]
+     [export-button]
+     [import-button]
      [notification-box]
      [:h1 "Ore Miner: Powered by ClojureScript!"]
      [:p "Currnent Funds: " (format-number @funds)]
